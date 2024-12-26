@@ -75,19 +75,36 @@ void handleModeToggle(void)
 
 void handleCountdownAdjustment(void)
 {
+  uint32_t currentTime = millis();
+
+  // Debounce protection
+  if (currentTime - lastButtonPressTime < 200)
+  {
+    return;
+  }
+  lastButtonPressTime = currentTime;
+
   if (currentState == SETTING)
   {
-    if (button_pressed(b1))
+    countdownValue = 60000;
+    while(button_pressed(b2))
     {
-      countdownValue += 60000;      // Add 1 minute
-      if (countdownValue > 3600000) // Max 1 hour
-        countdownValue = 60000;
+      // Update mode indication
+      lcd_set_cursor(lcd1, 0, 0);
+      lcd_print_String(lcd1, "Countdown: Setup");
+      lcd_set_cursor(lcd1, 0, 1);
+      lcd_print_String(lcd1, "minutes: ");
+      lcd_print_Int(lcd1, countdownValue / 60000);
+      lcd_print_String(lcd1, "  ");
+      if (button_pressed(b1))
+      {
+        countdownValue += 60000;      // Add 1 minute
+        if (countdownValue > 3600000) // Max 1 hour
+          countdownValue = 60000;
+      }
     }
-    if (button_pressed(b2))
-    {
-      if (countdownValue > 60000)
-        countdownValue -= 60000; // Subtract 1 minute
-    }
+    lcd_clear(lcd1);
+    currentState = READY;
     elapsedTime = countdownValue;
   }
 }
